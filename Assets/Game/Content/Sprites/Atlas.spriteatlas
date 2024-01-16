@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Atlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 3adec72add41a17469e6fb12a50bb248, type: 3}
+    - {fileID: 2800000, guid: f15ff939d37a2354487cf8fd4e6d8bce, type: 3}
+    - {fileID: 2800000, guid: 7e60f09d915c45e4485b7371527d3429, type: 3}
+    - {fileID: 2800000, guid: f76f6d3378d5de2458af2e5e8ac6d52a, type: 3}
+    - {fileID: 2800000, guid: 7358b1f8a7f80b74eab8f105776df83e, type: 3}
+    - {fileID: 2800000, guid: 21ec6667e993860468313688c8991abc, type: 3}
+    - {fileID: 2800000, guid: f5092ed1347365e4ca74bbb624b4e1e9, type: 3}
+    - {fileID: 2800000, guid: a115887cd4ed5b045a4d4222e7dc1787, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: f5092ed1347365e4ca74bbb624b4e1e9, type: 3}
+  - {fileID: 21300000, guid: f76f6d3378d5de2458af2e5e8ac6d52a, type: 3}
+  - {fileID: 21300000, guid: 21ec6667e993860468313688c8991abc, type: 3}
+  - {fileID: 21300000, guid: 7358b1f8a7f80b74eab8f105776df83e, type: 3}
+  - {fileID: 21300000, guid: f15ff939d37a2354487cf8fd4e6d8bce, type: 3}
+  - {fileID: 21300000, guid: 3adec72add41a17469e6fb12a50bb248, type: 3}
+  - {fileID: 21300000, guid: a115887cd4ed5b045a4d4222e7dc1787, type: 3}
+  - {fileID: 21300000, guid: 7e60f09d915c45e4485b7371527d3429, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - playerGrey_walk1
+  - enemyWalking_2
+  - playerGrey_up2
+  - playerGrey_up1
+  - enemySwimming_2
+  - enemySwimming_1
+  - playerGrey_walk2
+  - enemyWalking_1
+  m_RenderDataMap: {}
+  m_Tag: Atlas
+  m_IsVariant: 0
