@@ -23,11 +23,11 @@ namespace Client.Systems
             if (_sceneService.Value.GameIsOver)
                 return;
 
-            CheckLooseCondition();
+            CheckLoseCondition();
             CheckWinCondition();
         }
 
-        private void CheckLooseCondition()
+        private void CheckLoseCondition()
         {
             foreach (var entity in _collisionsEvtFilter.Value)
             {
