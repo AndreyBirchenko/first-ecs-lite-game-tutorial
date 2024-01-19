@@ -86,19 +86,8 @@ public class UnitView : MonoBehaviour
 
 ### Пользовательский ввод и передвижение
 
-Прежде чем писать логику по обработке ввода и передвижению нам нужна возможность двигать отображение. Добавим классу UnitView метод Move();
-
-```csharp
-public class UnitView : MonoBehaviour
-{
-    public void Move(Vector3 velocity)
-    {
-        transform.Translate(velocity);
-    }
-}
-```
-
-Также добавим пару методов которые будут менять направление юнита и проигрывать нужную анимацию передвижения
+Прежде чем писать логику по обработке ввода и передвижению нам нужна возможность двигать отображение. 
+Добавим классу UnitView метод Move(), а также пару методов которые будут менять направление юнита и проигрывать нужную анимацию передвижения
 
 ```csharp
 public class UnitView : MonoBehaviour
@@ -143,31 +132,30 @@ public class SceneService : MonoBehaviour
 }
 ```
 
-По ходу статьи мы будем ещё не раз сериализовывать поля. Прошу вас не забывать перетаскивать объекты со сцены в эти поля.
+>По ходу статьи мы будем ещё не раз сериализовывать поля. Прошу вас не забывать перетаскивать объекты со сцены в эти поля.
 
 Заинжектим SceneService во все будущие системы. Также уберём ненужные комментарии из класса EcsStartup.
 
 ```csharp
-sealed class EcsStartup : MonoBehaviour
+class EcsStartup
+
+[SerializeField] private SceneService _sceneService;
+
+EcsWorld _world;
+IEcsSystems _systems;
+
+void Start()
 {
-    [SerializeField] private SceneService _sceneService;
-
-    EcsWorld _world;
-    IEcsSystems _systems;
-
-    void Start()
-    {
-        _world = new EcsWorld();
-        _systems = new EcsSystems(_world);
-        _systems
-#if UNITY_EDITOR
-                
-            .Add(new Leopotam.EcsLite.UnityEditor.EcsWorldDebugSystem())
+     _world = new EcsWorld();
+    _systems = new EcsSystems(_world);
+    _systems
+#if UNITY_EDITOR       
+        .Add(new Leopotam.EcsLite.UnityEditor.EcsWorldDebugSystem())
 #endif
-            .Inject(_sceneService)
-            .Init();
-    }
+        .Inject(_sceneService)
+        .Init();
 }
+...
 ```
 
 Теперь можно приступать к обработке пользовательского ввода. 
@@ -241,6 +229,7 @@ public class PlayerInputSystem : IEcsRunSystem, IEcsInitSystem
 ```csharp
 public class MovementSystem : IEcsRunSystem
 {
+    private EcsPoolInject<UnitCmp> _unitCmpPool;
     private EcsFilterInject<Inc<UnitCmp>> _unitCmpFilter;
 
     public void Run(IEcsSystems systems)
@@ -364,7 +353,7 @@ class SceneService
 ...
 ```
 
-Теперь всё готово к тому чтобы написать логику для EnemySystem, но прежде добавьте скрипт UnitView на префаб EnemyView из папки префабов и перетащите его в поле EnemyViewPrefab на сцене. Также не забудьте перетащить камеру.
+Теперь всё готово к тому чтобы написать логику для EnemySystem, но прежде не забудьте перетащить камеру и префаб EnemyView в поля SceneService
 
 Начнём с создания метода CreateEnemy
 
@@ -464,12 +453,14 @@ class EnemiesSystem
 private EcsWorldInject _world;
 private EcsCustomInject<SceneService> _sceneService;
 private EcsPoolInject<UnitCmp> _unitCmpPool;
+// Добавляем дополнительные зависимости
 private EcsPoolInject<LifetimeCmp> _lifetimeCmpPool;
 private EcsFilterInject<Inc<LifetimeCmp>> _lifetimeFilter;
 ...
 public void Run(IEcsSystems systems)
 {
     CreateEnemy();
+    // Проверяем жив ли враг
     CheckEnemyLifetime();
 }
 
@@ -492,6 +483,7 @@ private void CreateEnemy()
     unitCmp.View.Construct(enemyEntity, _world.Value);
     unitCmp.Velocity = Vector3.up * _sceneService.Value.EnemyMoveSpeed;
 
+    // Добавляем Lifetime компонент
     ref var lifetimeCmp = ref _lifetimeCmpPool.Value.Add(enemyEntity);
     lifetimeCmp.Value = 3f;
 }
@@ -534,7 +526,7 @@ public class CounterView : MonoBehaviour
 }
 ```
 
-Добавьте этот скрипт на префаб CounterView из папки Prefabs и перетащите префаб UICanvas на игровую сцену. UICanvas также содержит в себе префаб PopupWindow с ним мы поработаем чуть позже. 
+Добавьте этот скрипт на префаб CounterView из папки Prefabs и перетащите префаб UICanvas на игровую сцену. Префаб UICanvas содержит в себе CounterView, а также PopupWindow с ним мы поработаем чуть позже. 
 
 Прокидываем CounterView через SceneService
 
@@ -636,7 +628,7 @@ public class PopupView : MonoBehaviour
 
 Добавьте скрипт на префаб PopupView и перетащите нужные зависимости.
 
-Не забудьте пробросить PopupView через SceneService
+Не забудьте добавить PopupView в SceneService
 
 ```csharp
 class SceneService
@@ -714,6 +706,7 @@ public void Init(IEcsSystems systems)
     _playerTagPool.Value.Add(_playerEntity);
     ref var playerCmp = ref _unitCmpPool.Value.Add(_playerEntity);
     playerCmp.View = _sceneData.Value.PlayerView;
+    //---//
     playerCmp.View.Construct(_playerEntity, _world.Value);
 }
 ...
@@ -736,6 +729,7 @@ private void CreateEnemy()
     ref var unitCmp = ref _unitCmpPool.Value.Add(enemyEntity);
     unitCmp.View = enemyView;
     unitCmp.Velocity = Vector3.up * _sceneService.Value.EnemyMoveSpeed;
+    //---//
     unitCmp.View.Construct(enemyEntity, _world.Value);
 
     ref var lifetimeCmp = ref _lifetimeCmpPool.Value.Add(enemyEntity);
@@ -884,9 +878,12 @@ public bool GameIsOver { get; set; }
 
 ```csharp
 class EndGameSystem
+//---//
+private EcsCustomInject<SceneService> _sceneService;
 ...
 public void Run(IEcsSystems systems)
 {
+    //---//
     if (_sceneService.Value.GameIsOver)
         return;
 
@@ -904,8 +901,9 @@ private void CheckLoseCondition()
         if (!_playerTagPool.Value.Has(collidedEntity))
             continue;
 
+        //---//
         _sceneService.Value.GameIsOver = true;
-				Debug.Log("Ты проиграл");
+		Debug.Log("Ты проиграл");
     }
 }
 
@@ -914,6 +912,7 @@ private void CheckWinCondition()
     if (Time.timeSinceLevelLoad <= 10)
         return;
 
+    //---//
     _sceneService.Value.GameIsOver = true;
     Debug.Log("Ты выиграл");
 }
@@ -923,6 +922,8 @@ private void CheckWinCondition()
 
 ```csharp
 class EndGameSystem
+//--//
+private EcsFilterInject<Inc<UnitCmp>> _unitCmpFilter;
 ...
 private void CheckLoseCondition()
 {
@@ -936,6 +937,7 @@ private void CheckLoseCondition()
 
         _sceneService.Value.GameIsOver = true;
         Debug.Log("Ты проиграл");
+        //---//
         StopAllUnits();
     }
 }
@@ -947,9 +949,11 @@ private void CheckWinCondition()
 
     _sceneService.Value.GameIsOver = true;
     Debug.Log("Ты выиграл");
+    //---//
     StopAllUnits();
 }
 
+//---//
 private void StopAllUnits()
 {
     foreach (var entity in _unitCmpFilter.Value)
@@ -963,6 +967,7 @@ class EnemiesSystem
 ...
 public void Run(IEcsSystems systems)
 {
+    //---//
     if (_sceneService.Value.GameIsOver)
         return;
     CreateEnemy();
@@ -977,6 +982,7 @@ class ScoreCounterSystem
 ...
 public void Run(IEcsSystems systems)
 {
+    //---//
     if (_sceneService.Value.GameIsOver)
         return;
 
@@ -1006,6 +1012,7 @@ private void CheckLoseCondition()
 
         _sceneService.Value.GameIsOver = true;
         StopAllUnits();
+        //---//
         ShowEndGamePopup("Ты проиграл");
     }
 }
@@ -1017,9 +1024,10 @@ private void CheckWinCondition()
 
     _sceneService.Value.GameIsOver = true;
     StopAllUnits();
+    //---//
     ShowEndGamePopup("Ты выиграл");
 }
-
+//---//
 private void ShowEndGamePopup(string message)
 {
     var popupWindow = _sceneService.Value.PopupView;
@@ -1030,7 +1038,7 @@ private void ShowEndGamePopup(string message)
     popupWindow.Button.onClick.RemoveAllListeners();
     popupWindow.Button.onClick.AddListener(RestartGame);
 }
-
+//---//
 private void RestartGame()
 {
     SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -1064,6 +1072,6 @@ void Start()
 
 ### Заключение
 
-В этой статье я постарался показать основные приёмы работы с паттерном ECS, надеюсь после прочтения и выполнения заданий вы стали лучше понимать как использовать паттерн и попробуете его в собственной разработке.
+В этой статье я постарался показать основные приёмы работы с паттерном ECS, надеюсь после прочтения и выполнения заданий вы стали лучше понимать как использовать паттерн и начнёте использовать его в собственной разработке.
 
-Если у вас остались какие-то вопросы вы можете задать их в комментариях или связаться со мной лично.
+Если у вас остались какие-то вопросы вы можете задать их в комментариях или [связаться со мной лично](https://t.me/AndreyBirchenko).
