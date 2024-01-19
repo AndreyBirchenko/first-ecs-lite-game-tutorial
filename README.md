@@ -8,6 +8,8 @@
 
 Создадим [простую игру](https://andreybirchenko.github.io/first-ecs-lite-game-tutorial/) в которой игроку нужно уворачиваться от врагов и таким образом продержаться 10 секунд.
 
+[Репозиторий](https://github.com/AndreyBirchenko/first-ecs-lite-game-tutorial)
+
 <img src="gameplay.gif" alt="gameplay.gif" />
 
 
