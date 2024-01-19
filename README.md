@@ -47,13 +47,13 @@ MovementSystem - Двигает юнитов по карте
 
 EnemiesSystem - Создаёт вражеских юнитов, также удаляет невидимых юнитов с экрана
 
-ScoreCounterSystem - Считает сколько секунд продержался игрок, обновляет счётчик секунд на экране.
+ScoreCounterSystem - Считает сколько секунд продержался игрок, обновляет счётчик секунд на экране
 
 EndGameSystem - Определяет конец игры. Показывает попап “Ты победил” или “Попробуй ещё раз”
 
 >При проектировании систем старайтесь воспринимать их как отдельные фичи, изолированные друг от друга. То есть результаты работы одной системы не должны зависеть от результатов другой. Системы должны иметь возможность работать всегда, а результат их работы зависит только от входных данных. Такой подход очень упрощает изменение и рефакторинг кода.
 
-Также нам потребуются сервисы - классы помошники. Сами по себе они не являются бизнес логикой и используются как “чёрные ящики” чтобы что-то посчитать обработать или доставить данные. Хороший пример сервиса это “поиск пути” вы подаёте на вход две позиции, происходит какая-то магия и сервис возвращает вам путь между ними. 
+Также нам потребуются сервисы - классы помощники. Сами по себе они не являются бизнес логикой и используются как “чёрные ящики” чтобы что-то посчитать обработать или доставить данные. Хороший пример сервиса это “поиск пути”: вы подаёте на вход две позиции, происходит какая-то магия и сервис возвращает вам путь между ними. 
 
 >Важно понимать что сервисы могут представлять собой ООП классы, которые подключаются в системы. То есть вам не нужно стараться всё писать на Ecs, в некоторых случаях гораздо проще воспользоваться ООП чем придумывать сложную реализацию через системы.
 
@@ -128,8 +128,9 @@ public class UnitView : MonoBehaviour
 }
 ```
 
-Не забудьте открыть префаб UnitViewBase и перетащить SpriteRenderer и Animator в сериализованные поля. Также добавьте префаб PlayerView на игровую сцену
+Не забудьте открыть префаб UnitViewBase и перетащить SpriteRenderer и Animator в сериализованные поля. 
 
+Также добавьте префаб PlayerView на игровую сцену
 Теперь нам нужно как-то прокинуть PlayerView в системы, сделаем это через SceneService.
 
 Также добавим поле PlayerMoveSpeed чтобы было удобнее регулировать скорость игрока из инспектора.
@@ -138,11 +139,9 @@ public class UnitView : MonoBehaviour
 public class SceneService : MonoBehaviour
 {
     [field: SerializeField] public UnitView PlayerView { get; private set; }
-		[field: SerializeField] public float PlayerMoveSpeed { get; private set; } = 10;
+	[field: SerializeField] public float PlayerMoveSpeed { get; private set; } = 10;
 }
 ```
-
-(сноска инфо)
 
 По ходу статьи мы будем ещё не раз сериализовывать поля. Прошу вас не забывать перетаскивать объекты со сцены в эти поля.
 
@@ -196,7 +195,7 @@ public struct PlayerTag
 ```csharp
 public class PlayerInputSystem : IEcsRunSystem, IEcsInitSystem
 {
-		// Инжектим нужные зависимости
+	// Инжектим нужные зависимости
     private EcsWorldInject _world;
     private EcsPoolInject<UnitCmp> _unitCmpPool;
     private EcsPoolInject<PlayerTag> _playerTagPool;
@@ -694,7 +693,7 @@ public void Construct(int entity, EcsWorld world)
     _world = world;
 }
 
-private void OnCollisionEnter2D(Collision2D other)
+private void OnCollisionEnter2D(Collision2D _)
 {
     var entity = _world.NewEntity();
     var pool = _world.GetPool<CollisionEvt>();
@@ -756,10 +755,10 @@ public class EndGameSystem : IEcsRunSystem
 
     public void Run(IEcsSystems systems)
     {
-        CheckLooseCondition();
+        CheckLoseCondition();
     }
 
-    private void CheckLooseCondition()
+    private void CheckLoseCondition()
     {
         foreach (var entity in _collisionsEvtFilter.Value)
         {
@@ -800,7 +799,7 @@ void Start()
 
 После того как вы запустите игру и вражеский юнит столкнётся с юнитом игрока вы увидите в консоли очень много сообщений “Ты проиграл”, хотя ожидаем мы по одному сообщению после каждого столкновения. Почему так?
 
-Дело в том что “отправка ивента” ничто иное как просто создание новой сущности с компонентом в мире. Чтобы это действительно работало как ивент нам нужно удалять все компоненты до конца кадра. Для этого мы можем использовать метод DelHere<T>()
+Дело в том что “отправка ивента” не что иное, как  просто создание новой сущности с компонентом в мире. Чтобы это действительно работало как ивент нам нужно удалять все компоненты до конца кадра. Для этого мы можем использовать метод DelHere<T>()
 
 ```csharp
 class EcsStartup
@@ -833,7 +832,7 @@ class EndGameSystem
 ...
 public void Run(IEcsSystems systems)
 {
-    CheckLooseCondition();
+    CheckLoseCondition();
     CheckWinCondition();
 }
 
@@ -891,11 +890,11 @@ public void Run(IEcsSystems systems)
     if (_sceneService.Value.GameIsOver)
         return;
 
-    CheckLooseCondition();
+    CheckLoseCondition();
     CheckWinCondition();
 }
 
-private void CheckLooseCondition()
+private void CheckLoseCondition()
 {
     foreach (var entity in _collisionsEvtFilter.Value)
     {
@@ -920,12 +919,12 @@ private void CheckWinCondition()
 }
 ```
 
-Игра уже почти готова. Осталось показать попап и исправить мелкие баги. Давайте начнём с багов. Во первых когда игра заканчивается нам нужно перестать спавнить врагов и остановить их движение. Для этого добавим метод StopAllUnits() в EndGameSystem и проверку на конец игры в EnemiesSystem
+Игра уже почти готова. Осталось показать попап и исправить мелкие баги. Давайте начнём с багов. Во-первых, когда игра заканчивается, нам нужно перестать спавнить врагов и остановить их движение. Для этого добавим метод StopAllUnits() в EndGameSystem и проверку на конец игры в EnemiesSystem
 
 ```csharp
 class EndGameSystem
 ...
-private void CheckLooseCondition()
+private void CheckLoseCondition()
 {
     foreach (var entity in _collisionsEvtFilter.Value)
     {
@@ -995,7 +994,7 @@ public void Run(IEcsSystems systems)
 ```csharp
 class EndGameSystem
 ...
-private void CheckLooseCondition()
+private void CheckLoseCondition()
 {
     foreach (var entity in _collisionsEvtFilter.Value)
     {
